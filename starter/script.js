@@ -135,27 +135,3 @@ const getCountryData = function (country) {
 };
 getCountryData('turkey');
 //getCountryData('germany');
-
-
-const getCountryData2 = function (country) {
-  //country 1
-  //? fetch ile promise oluşturuldu, promislerde then() kullanılabilir ve ald. arguman yanıt olacaktır
-  fetch(`https://restcountries.com/v2/name/${country}`)
-    .then(
-      response => response.json() //?response (yanıt) daki verileri okumak istersek json()kullanılır ve bu dayeni bir promise olacak .Bu promise i yerine getirmek için yeni çağrı yapmalıyız then() kull
-    )
-    .then(data => {
-      renderCountry(data[0]); //?Ülke bilgilerini getirecek
-
-      //! neighbour
-      const neighbour = data[0].borders?.[0];
-      if (!neighbour) return;
-      //country 2
-      return fetch(`https://restcountries.com/v2/alpha/${neighbour}`);
-    })
-    //then e zincirlemek daha iyi diğer türlü fetch e zincirlersen call back func cehennemine geri dönmüş olursun gerek yok
-    .then(response => response.json())
-    .then(data => renderCountry(data, 'neighbour'));
-};
-getCountryData2('turkey');
-//getCountryData('germany');
