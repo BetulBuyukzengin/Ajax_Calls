@@ -113,7 +113,7 @@ getCountryData('turkey');
  */
 
 // Arrow Function:
-/* const getCountryData = function (country) {
+const getCountryData = function (country) {
   //country 1
   //? fetch ile promise oluşturuldu, promislerde then() kullanılabilir ve ald. arguman yanıt olacaktır
   fetch(`https://restcountries.com/v2/name/${country}`)
@@ -134,6 +134,4 @@ getCountryData('turkey');
     .then(data => renderCountry(data, 'neighbour'));
 };
 getCountryData('turkey');
- */
-
-
+//getCountryData('germany');
