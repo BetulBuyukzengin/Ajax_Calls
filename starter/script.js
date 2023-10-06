@@ -4,6 +4,32 @@ const btn = document.querySelector('.btn-country');
 const countriesContainer = document.querySelector('.countries');
 
 ///////////////////////////////////////
+
+const renderCountry = function (data, className = '') {
+  const html = `
+  <article class="country ${className}">
+    <img class="country__img" src="${data.flag}" />
+    <div class="country__data">
+      <h3 class="country__name">${data.name}</h3>
+      <h4 class="country__region">${data.region}</h4>
+      <p class="country__row"><span>👫</span>${(
+        +data.population / 1000000
+      ).toFixed(1)}</p>
+      <p class="country__row"><span>🗣️</span>${data.languages[0].name}</p>
+      <p class="country__row"><span>💰</span>${data.currencies[0].code} (${
+    data.currencies[0].symbol
+  })</p>
+    </div>
+  </article>
+   `;
+  countriesContainer.insertAdjacentHTML('beforeend', html);
+  // countriesContainer.style.opacity = 1;
+};
+
+const renderError = function (msg) {
+  countriesContainer.insertAdjacentText('beforeend', msg);
+  //  countriesContainer.style.opacity = 1;
+};
 //! AJAX: XMLHttpRecuest() --> eski yontem
 /* const getCountryData = function (country, className ='') {
   const request = new XMLHttpRequest();
@@ -42,27 +68,6 @@ getCountryData('turkey', 'neighbour'); */
 
 // **************
 
-const renderCountry = function (data, className = '') {
-  const html = `
-  <article class="country ${className}">
-    <img class="country__img" src="${data.flag}" />
-    <div class="country__data">
-      <h3 class="country__name">${data.name}</h3>
-      <h4 class="country__region">${data.region}</h4>
-      <p class="country__row"><span>👫</span>${(
-        +data.population / 1000000
-      ).toFixed(1)}</p>
-      <p class="country__row"><span>🗣️</span>${data.languages[0].name}</p>
-      <p class="country__row"><span>💰</span>${data.currencies[0].code} (${
-    data.currencies[0].symbol
-  })</p>
-    </div>
-  </article>
-   `;
-  countriesContainer.insertAdjacentHTML('beforeend', html);
-  countriesContainer.style.opacity = 1;
-};
-
 /* const getCountryAndNeighbour = function (country) {
   // AJAX call country 1
   const request = new XMLHttpRequest();
@@ -95,14 +100,14 @@ const renderCountry = function (data, className = '') {
 };
 getCountryAndNeighbour('turkey');
     */
-
-// ******* CONSUMING  PROMISES*******
+//-------------------guncel yontem-------------------
+// ******* CONSUMING  PROMISES *******
 /* const getCountryData = function (country) {
-  //? fetch ile promise oluşturuldu, promislerde then() kullanılabilir ve ald. arguman yanıt olacaktır
+  //? fetch ile promise oluşturuldu
   fetch(`https://restcountries.com/v2/name/${country}`)
     .then(function (response) {
       console.log(response);
-      return response.json(); //?response (yanıt) daki verileri okumak istersek json()kullanılır ve bu dayeni bir promise olacak .Bu promise i yerine getirmek için yeni çağrı yapmalıyız then() kull
+      return response.json(); //?response daki verileri okuma
     })
     .then(function (data) {
       console.log(data);
@@ -112,14 +117,17 @@ getCountryAndNeighbour('turkey');
 getCountryData('turkey');
  */
 
-// Arrow Function:
-const getCountryData = function (country) {
+// Arrow Function Style:
+/* const getCountryData = function (country) {
   //country 1
-  //? fetch ile promise oluşturuldu, promislerde then() kullanılabilir ve ald. arguman yanıt olacaktır
+  //? fetch ile promise oluşturuldu
   fetch(`https://restcountries.com/v2/name/${country}`)
-    .then(
-      response => response.json() //?response (yanıt) daki verileri okumak istersek json()kullanılır ve bu dayeni bir promise olacak .Bu promise i yerine getirmek için yeni çağrı yapmalıyız then() kull
-    )
+    .then(response => {
+      if (!response.ok)
+        //hata fırlat
+        throw new Error(`Country not found (${response.status})`);
+      return response.json(); //?response daki verileri okuma
+    })
     .then(data => {
       renderCountry(data[0]); //?Ülke bilgilerini getirecek
 
@@ -129,9 +137,51 @@ const getCountryData = function (country) {
       //country 2
       return fetch(`https://restcountries.com/v2/alpha/${neighbour}`);
     })
-    //then e zincirlemek daha iyi diğer türlü fetch e zincirlersen call back func cehennemine geri dönmüş olursun gerek yok
     .then(response => response.json())
-    .then(data => renderCountry(data, 'neighbour'));
+    .then(data => renderCountry(data, 'neighbour'))
+    //hata yakalama
+    .catch(err => {
+      console.log(`${err} 🧨🧨🧨`);
+      renderError(`Something went wrong 🧨🧨 ${err}.Try again! `);
+      // Promise nin resolved veya rejected durumundan bağımsız olarak ikisi için çalışır
+    })
+    .finally(() => {
+      countriesContainer.style.opacity = 1;
+    });
+};  */
+
+ const getJSON = function (url, errorMsg = 'Something went wrong') {
+  return fetch(url).then(response => {
+    if (!response.ok) throw new Error(`${errorMsg} (${response.status})`);
+    return response.json();//?response daki verileri okuma
+  });
 };
-getCountryData('turkey');
-//getCountryData('germany');
+const getCountryData = function (country) {
+  //country 1
+  //? fetch ile promise oluşturuldu
+  getJSON(`https://restcountries.com/v2/name/${country}`)
+    .then(data => {
+      renderCountry(data[0]); //?Ülke bilgilerini getirecek
+
+      //! neighbour-country 2
+      const neighbour = data[0].borders?.[0];
+      if (!neighbour) throw new Error('There is no neighbour found!');
+      return getJSON(`https://restcountries.com/v2/alpha/${neighbour}`,'Country not found');
+    })
+    .then(data => renderCountry(data, 'neighbour'))
+    //?hata yakalama
+    .catch(err => {
+      console.log(`${err} 🧨🧨🧨`);
+      renderError(`Something went wrong 🧨🧨 ${err}.Try again! `);
+      //? finally, promise nin resolved veya rejected durumundan bağımsız olarak ikisi için çalışır
+    })
+    .finally(() => {
+      countriesContainer.style.opacity = 1;
+    });
+}; 
+btn.addEventListener('click', function () {
+  getCountryData('turkey');
+  //getCountryData('germany');
+});
+
+getCountryData('australia');
